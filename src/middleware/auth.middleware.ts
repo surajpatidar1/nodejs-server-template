@@ -6,10 +6,20 @@ const getAccessToken = (req: Request): string | undefined => {
   const authorization = req.headers.authorization;
 
   if (authorization?.startsWith("Bearer ")) {
-    return authorization.split(" ")[1];
+    const token = authorization.slice(7).trim();
+
+    if (token) {
+      return token;
+    }
   }
 
-  return req.cookies?.accessToken;
+  const cookieToken = req.cookies?.[TokenType.ACCESS_TOKEN]
+
+  if (cookieToken?.trim()) {
+    return cookieToken;
+  }
+
+  return undefined;
 };
 
 export const authMiddleware = (
@@ -23,12 +33,16 @@ export const authMiddleware = (
     throw UnauthorizedException("Access token required");
   }
 
-  const payload = jwtService.verify(
-    token,
-    TokenType.ACCESS_TOKEN,
-  );
+  try {
+    const payload = jwtService.verify(
+      token,
+      TokenType.ACCESS_TOKEN,
+    );
 
-  req.user = payload;
+    req.user = payload;
 
-  next();
+    next();
+  } catch {
+    throw UnauthorizedException("Invalid or expired token");
+  }
 };
