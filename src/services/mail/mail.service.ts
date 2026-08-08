@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import { configMail } from '@/configs/index.js';
-import { MailJobData, mailQueue } from './mail.queue.js';
+import { mailQueue } from './mail.queue.js';
+import type { MailJobData } from './mail.queue.js';
+import { renderTemplate } from './renderer.js';
 
 const transporter = nodemailer.createTransport({
   host: configMail.HOST,
@@ -13,19 +15,31 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const enqueue = async (data: MailJobData): Promise<void> => {
+  await mailQueue.add('send-mail', data);
+};
+
 export const mailService = {
-  async enqueue(
-    data: MailJobData,
-  ): Promise<void> {
-    await mailQueue.add(
-      'send-mail',
-      data,
-    );
+  async enqueue(data: MailJobData): Promise<void> {
+    await enqueue(data);
   },
-  
-  async send(
-    data: MailJobData,
-  ): Promise<void> {
+
+  async enqueueTemplate(data: {
+    to: string;
+    subject: string;
+    template: string;
+    variables: object;
+  }): Promise<void> {
+    const html = renderTemplate(data.template, data.variables);
+
+    await enqueue({
+      to: data.to,
+      subject: data.subject,
+      html,
+    });
+  },
+
+  async send(data: MailJobData): Promise<void> {
     await transporter.sendMail({
       from: configMail.FROM,
       to: data.to,

@@ -1,5 +1,5 @@
-// import { Request, Response } from "express";
+import { Request, Response } from 'express';
 
-// export async function (req :Request, res : Response) {
-      
-// } 
+export const sendCode = async (req: Request, res: Response) => {
+  const data = req.body;
+};
