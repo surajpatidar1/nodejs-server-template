@@ -6,7 +6,6 @@ const scryptAsync = promisify(crypto.scrypt);
 
 export const hashPassword = async (password: string) => {
   const salt = crypto.randomBytes(configPassword.SALT_LENGTH).toString("hex");
-
   const derivedKey = (await scryptAsync(
     password,
     salt,

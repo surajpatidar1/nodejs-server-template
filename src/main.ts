@@ -1,4 +1,4 @@
-import {logger} from '@/utils/index.js';
+import { logger } from '@/utils/index.js';
 import { configFactory } from '@/configs/index.js';
 import { composeDown, composeUp } from '@/lifecycle/index.js';
 
@@ -12,7 +12,7 @@ const bootstrap = async (): Promise<void> => {
       throw new Error('Required configuration is missing');
     }
 
-    const server = await composeUp({
+    const { server, mailProcessor } = await composeUp({
       port: Number(configFactory.PORT),
       appName: configFactory.APP_NAME,
       env: configFactory.NODE_ENV,
@@ -21,11 +21,18 @@ const bootstrap = async (): Promise<void> => {
     logger.info('Application bootstrap completed');
 
     process.on('SIGINT', async () => {
-      await composeDown(server, 'SIGINT');
+      await composeDown(
+        server,
+        'SIGINT',
+        mailProcessor);
     });
 
     process.on('SIGTERM', async () => {
-      await composeDown(server, 'SIGTERM');
+      await composeDown(
+        server,
+        'SIGTERM',
+        mailProcessor
+      );
     });
 
   } catch (error) {
