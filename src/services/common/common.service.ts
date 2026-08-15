@@ -65,4 +65,15 @@ export const utilService = {
   isOtpExpired(lastSentAt: Date, ttlInMinutes = 5): boolean {
     return Date.now() - lastSentAt.getTime() > ttlInMinutes * 60 * 1000;
   },
+
+  generateUsername(name: string): string {
+    const username = name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+
+    const randomNumber = crypto.randomInt(1000, 9999);
+
+    return `${username}${randomNumber}`;
+  },
 } as const;

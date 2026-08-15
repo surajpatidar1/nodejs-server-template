@@ -4,3 +4,5 @@ export * from './cookie/cookie.service.js';
 export * from './common/common.service.js';
 export * from './redis/redis.service.js';
 export * from './mail/index.js';
+export * from './storage/index.js';
+export * from './otp/otp.service.js';
