@@ -1,8 +1,25 @@
-import express from 'express'
+import { Router } from 'express';
+import { sendCode, checkUsername, register, login } from './auth.controller.js';
+import { validateBody } from '@/middleware/body.validate.middleware.js';
+import {
+  checkUsernameValidator,
+  loginValidator,
+  registerValidator,
+  sendCodeValidator,
+} from './auth.validator.js';
 
-const authRoute = express.Router()
+const authRouter = Router();
 
-authRoute.post("/register")
-authRoute.post("/login")
+authRouter.post('/send-code', validateBody(sendCodeValidator), sendCode);
 
-export default authRoute
+authRouter.post(
+  '/check-username',
+  validateBody(checkUsernameValidator),
+  checkUsername,
+);
+
+authRouter.post('/register', validateBody(registerValidator), register);
+
+authRouter.post('/login', validateBody(loginValidator), login);
+
+export default authRouter;

@@ -1,75 +1,140 @@
-import { databaseService, mailService, utilService } from '@/services/index.js';
-import { BadRequestException } from '@/utils/exceptions.js';
-import { OTP_TTL_MINUTES } from './index.js';
+import {
+  databaseService,
+  otpService,
+  OtpType,
+  utilService,
+} from '@/services/index.js';
+import {
+  ConflictException,
+  UnauthorizedException,
+} from '@/utils/exceptions.js';
+import { User } from '@/generated/prisma/client.js';
+import { userService } from '../user/index.js';
+import { UserType } from '@/types/index.js';
+
+const findUser = async (email: string) => {
+  const user = await databaseService.client.user.findUnique({
+    where: { email },
+  });
+
+  if (user) {
+    return {
+      user: user,
+      type: UserType.USER,
+    };
+  }
+
+  const admin = await databaseService.client.admin.findUnique({
+    where: { email },
+  });
+
+  if (admin) {
+    return {
+      user: admin,
+      type: UserType.ADMIN,
+    };
+  }
+
+  return null;
+};
 
 export const authService = {
-  async sendCode(data: { email: string; type: string }) {
-    const isUser = await databaseService.client.user.findUnique({
+  async sendCode(data: { email: string; type: OtpType }) {
+    return await otpService.sendCode({
+      email: data.email,
+      type: data.type,
+    });
+  },
+
+  async generateAvailableUsername(name: string): Promise<string> {
+    const username = utilService.generateUsername(name);
+
+    const exists = await databaseService.client.user.findUnique({
+      where: {
+        username,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (exists) {
+      throw ConflictException('Username already exists.');
+    }
+
+    return username;
+  },
+
+  async register(data: {
+    firstname: string;
+    lastname: string;
+    username: string;
+    email: string;
+    password: string;
+    dailcode: string;
+    mobile: string;
+    profileImage?: string;
+    country: string;
+    code: string;
+  }): Promise<User> {
+    const isVerified = await otpService.verifyOtp({
+      email: data.email,
+      otp: data.code,
+    });
+
+    if (!isVerified) throw UnauthorizedException('OTP verification failed.');
+
+    const checkUser = await databaseService.client.user.findUnique({
       where: {
         email: data.email,
       },
     });
 
-    if (isUser) {
-      throw BadRequestException('User already registered .');
+    if (checkUser) throw ConflictException('User already register');
+    return userService.create(data);
+  },
+
+  async login(data: { email: string; password: string }) {
+    const result = await findUser(data.email);
+
+    if (!result) throw UnauthorizedException('Invalid credentials');
+
+    const { user, type } = result;
+
+    const meta =
+      type === UserType.USER
+        ? await databaseService.client.userMeta.findUnique({
+            where: { userId: user.id },
+            select: {
+              passwordHash: true,
+              passwordSalt: true,
+            },
+          })
+        : await databaseService.client.adminMeta.findUnique({
+            where: { adminId: user.id },
+            select: {
+              passwordHash: true,
+              passwordSalt: true,
+            },
+          });
+
+    if (!meta?.passwordHash || !meta.passwordSalt) {
+      throw UnauthorizedException('Invalid credentials');
     }
 
-    const existingOtp = await databaseService.client.otp.findUnique({
-      where: {
-        transport_target: {
-          transport: 'Email',
-          target: data.email,
-        },
-      },
-    });
+    const isValid = await utilService.verifyPassword(
+      data.password,
+      meta.passwordHash,
+      meta.passwordSalt,
+    );
 
-    if (
-      existingOtp &&
-      !utilService.isOtpExpired(existingOtp.lastSentAt, OTP_TTL_MINUTES)
-    ) {
-      throw BadRequestException(
-        'OTP already sent. Please wait before requesting another.',
-      );
+    if (!isValid) {
+      throw UnauthorizedException('Invalid credentials');
     }
-
-    const { code } = utilService.generateOtp();
-
-    await databaseService.client.otp.upsert({
-      where: {
-        transport_target: {
-          transport: 'Email',
-          target: data.email,
-        },
-      },
-      update: {
-        code,
-        lastSentAt: new Date(),
-        attempt: {
-          increment: 1,
-        },
-        retries: 0,
-        lastCodeVerified: false,
-        blocked: false,
-      },
-      create: {
-        code,
-        transport: 'Email',
-        target: data.email,
-      },
-    });
-
-    await mailService.enqueueTemplate({
-      to: data.email,
-      subject: 'Verification code',
-      template: 'otp',
-      variables: {
-        code: code,
-        expiresIn: OTP_TTL_MINUTES,
-      },
-    });
 
     return {
-      message: 'Verification code sent successfully.',
+      user,
+      type,
     };
   },
 } as const;
