@@ -1,6 +1,4 @@
 import { Router } from 'express';
-import multer from 'multer';
-
 import {
   updateImage,
   updateUserDetails,
@@ -22,32 +20,26 @@ import {
 
 const userRouter = Router();
 
-const upload = multer({
-  dest: 'storage/tmp',
-});
-
-userRouter.use(authMiddleware, guard(UserType.USER));
-
-userRouter.patch('/update-image', validateBody(updateImageSchema), updateImage);
-
-userRouter.patch(
-  '/details',
-  validateBody(updateUserDetailsSchema),
-  updateUserDetails,
-);
-
-userRouter.patch(
-  '/change-password',
-  validateBody(changePasswordSchema),
-  changePassword,
-);
-
+//public route
 userRouter.patch(
   '/forgot-password',
   validateBody(forgotPasswordSchema),
   forgotPassword,
 );
 
-userRouter.delete('/', removeUser);
+//protected route
+userRouter.use(authMiddleware, guard(UserType.USER));
+userRouter.post('/update-image', validateBody(updateImageSchema), updateImage);
+userRouter.patch(
+  '/details',
+  validateBody(updateUserDetailsSchema),
+  updateUserDetails,
+);
+userRouter.patch(
+  '/change-password',
+  validateBody(changePasswordSchema),
+  changePassword,
+);
+userRouter.delete('/:userId', removeUser);
 
 export default userRouter;

@@ -6,7 +6,6 @@ import { configStorage } from '@/configs/index.js';
 import type { StorageFile, StorageResult } from '../storage.types.js';
 
 const destination = path.resolve(configStorage.LOCAL.DESTINATION);
-
 const ensureDirectory = async (
   directory: string = destination,
 ): Promise<void> => {
@@ -29,9 +28,7 @@ const upload = async (file: StorageFile): Promise<StorageResult> => {
   await ensureDirectory();
 
   const extension = path.extname(file.originalName);
-
   const key = `${crypto.randomUUID()}${extension}`;
-
   const filePath = resolvePath(key);
 
   await fs.writeFile(filePath, file.buffer);
@@ -63,13 +60,10 @@ const getUrl = async (key: string): Promise<string> => {
 
 const move = async (filename: string, folder: string): Promise<string> => {
   const sourcePath = path.resolve(destination, 'tmp', filename);
-
   const destinationDir = path.resolve(destination, folder);
-
   await ensureDirectory(destinationDir);
 
   const destinationPath = path.resolve(destinationDir, filename);
-
   await fs.rename(sourcePath, destinationPath);
 
   return `/storage/${folder}/${filename}`;

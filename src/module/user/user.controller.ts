@@ -33,8 +33,8 @@ export const updateUserDetails = async (req: Request, res: Response) => {
 };
 
 export const removeUser = async (req: Request, res: Response) => {
-  const userId = Number(req.user.sub);
-  const user = await userService.deactiveUser(userId);
+  const userId = req.params.userId;
+  const user = await userService.deactiveUser(Number(userId));
 
   return res.status(200).json({
     success: true,

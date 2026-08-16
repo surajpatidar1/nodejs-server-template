@@ -1,18 +1,21 @@
-import type { NextFunction, Request, Response } from 'express';
-import type { ZodSchema } from 'zod';
+import { ZodObject } from 'zod';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 
-export function validateBody(schema: ZodSchema) {
-  return async (
+export function validateBody(schema: ZodObject): RequestHandler {
+  const middleware: RequestHandler = (
     req: Request,
-    _res: Response,
+    res: Response,
     next: NextFunction,
-  ): Promise<void> => {
-    try {
-      req.body = await schema.parseAsync(req.body);
-
-      next();
-    } catch (error) {
-      next(error);
+  ) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ errors: result.error.flatten() });
     }
+    req.body = result.data;
+    next();
   };
-};
+
+  (middleware as any).zodSchema = schema;
+
+  return middleware;
+}
