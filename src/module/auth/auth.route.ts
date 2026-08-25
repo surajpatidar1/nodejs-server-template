@@ -1,9 +1,16 @@
 import { Router } from 'express';
-import { sendCode, checkUsername, register, login } from './auth.controller.js';
+import {
+  sendCode,
+  checkUsername,
+  register,
+  login,
+  refresh,
+} from './auth.controller.js';
 import { validateBody } from '@/middleware/body.validate.middleware.js';
 import {
   checkUsernameValidator,
   loginValidator,
+  refreshValidator,
   registerValidator,
   sendCodeValidator,
 } from './auth.validator.js';
@@ -21,5 +28,7 @@ authRouter.post(
 authRouter.post('/register', validateBody(registerValidator), register);
 
 authRouter.post('/login', validateBody(loginValidator), login);
+
+authRouter.post('/refresh', validateBody(refreshValidator), refresh);
 
 export default authRouter;

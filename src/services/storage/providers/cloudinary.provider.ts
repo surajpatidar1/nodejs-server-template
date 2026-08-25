@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { configStorage } from '@/configs/index.js';
+import { BadRequestException } from '@/utils/exceptions.js';
 import type { StorageFile, StorageResult } from '../storage.types.js';
 
 cloudinary.config({
@@ -12,8 +13,7 @@ cloudinary.config({
 
 const upload = async (file: StorageFile): Promise<StorageResult> => {
   const extension = path.extname(file.originalName);
-
-  const publicId = `${crypto.randomUUID()}${extension}`;
+  const publicId = `tmp/${crypto.randomUUID()}${extension}`;
 
   const result = await new Promise<{
     public_id: string;
@@ -52,10 +52,18 @@ const upload = async (file: StorageFile): Promise<StorageResult> => {
   };
 };
 
+const DELETABLE_RESOURCE_TYPES = ['image', 'raw', 'video'] as const;
+
 const remove = async (key: string): Promise<void> => {
-  await cloudinary.uploader.destroy(key, {
-    resource_type: 'image',
-  });
+  for (const resourceType of DELETABLE_RESOURCE_TYPES) {
+    const result = await cloudinary.uploader.destroy(key, {
+      resource_type: resourceType,
+    });
+
+    if (result.result === 'ok') {
+      return;
+    }
+  }
 };
 
 const getUrl = async (key: string): Promise<string> => {
@@ -64,15 +72,21 @@ const getUrl = async (key: string): Promise<string> => {
   });
 };
 
-const move = async (filename: string, folder: string): Promise<string> => {
-  const newPublicId = `${folder}/${filename}`;
+const move = async (key: string, folder: string): Promise<string> => {
+  if (!key.startsWith('tmp/')) {
+    throw BadRequestException('Invalid file key: must be a temporary upload.');
+  }
 
-  const result = await cloudinary.uploader.rename(filename, newPublicId, {
+  const newPublicId = `${folder}/${path.basename(key)}`;
+
+  await cloudinary.uploader.rename(key, newPublicId, {
     resource_type: 'auto',
     overwrite: false,
   });
 
-  return result.secure_url;
+  // Return the public_id (key) so the DB stores a key, not a URL.
+  // getUrl() in this provider reconstructs the full URL from the public_id.
+  return newPublicId;
 };
 
 export const cloudinaryStorageProvider = {

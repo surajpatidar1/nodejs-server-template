@@ -1,4 +1,4 @@
-import { User, UserStatus } from '@/generated/prisma/client.js';
+import { Prisma, User, UserStatus } from '@/generated/prisma/client.js';
 import {
   databaseService,
   utilService,
@@ -249,6 +249,54 @@ export const userService = {
     return {
       success: true,
       message: 'Password reset successfully.',
+    };
+  },
+
+  async getAll(options?: {
+    search?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<{
+    count: number;
+    skip: number;
+    take: number;
+    data: User[];
+  }> {
+    const skip = options?.skip ?? 0;
+    const take = options?.take ?? 10;
+
+    const where: Prisma.UserWhereInput = utilService.buildSearchFilter(
+      options?.search,
+      ['firstname', 'lastname', 'username', 'email', 'mobile'],
+    );
+
+    const [count, users] = await Promise.all([
+      databaseService.client.user.count({
+        where,
+      }),
+
+      databaseService.client.user.findMany({
+        where,
+        orderBy: {
+          id: 'asc',
+        },
+        skip,
+        take,
+      }),
+    ]);
+
+    const data = await utilService.batchable(users, async (user) => ({
+      ...user,
+      profileImage: user.profileImage
+        ? await storageService.getUrl(user.profileImage)
+        : null,
+    }));
+
+    return {
+      count,
+      skip,
+      take,
+      data,
     };
   },
 } as const;

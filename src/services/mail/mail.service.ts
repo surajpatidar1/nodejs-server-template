@@ -20,6 +20,10 @@ const enqueue = async (data: MailJobData): Promise<void> => {
 };
 
 export const mailService = {
+  async verifyConnection(): Promise<void> {
+    await transporter.verify();
+  },
+
   async enqueue(data: MailJobData): Promise<void> {
     await enqueue(data);
   },

@@ -1,12 +1,11 @@
 import { Router } from 'express';
-import multer from 'multer';
-
 import {
   updateImage,
   updateUserDetails,
   removeUser,
   changePassword,
   forgotPassword,
+  getAllUser,
 } from './user.controller.js';
 
 import { authMiddleware } from '@/middleware/auth.middleware.js';
@@ -16,19 +15,23 @@ import { UserType } from '@/types/index.js';
 import {
   changePasswordSchema,
   forgotPasswordSchema,
+  getAllUsersValidator,
   updateImageSchema,
   updateUserDetailsSchema,
 } from './user.validator.js';
 
 const userRouter = Router();
 
-const upload = multer({
-  dest: 'storage/tmp',
-});
+//public route
+userRouter.patch(
+  '/forgot-password',
+  validateBody(forgotPasswordSchema),
+  forgotPassword,
+);
 
+//protected route
 userRouter.use(authMiddleware, guard(UserType.USER));
-
-userRouter.patch('/update-image', validateBody(updateImageSchema), updateImage);
+userRouter.post('/update-image', validateBody(updateImageSchema), updateImage);
 
 userRouter.patch(
   '/details',
@@ -42,12 +45,8 @@ userRouter.patch(
   changePassword,
 );
 
-userRouter.patch(
-  '/forgot-password',
-  validateBody(forgotPasswordSchema),
-  forgotPassword,
-);
+userRouter.delete('/:userId', removeUser);
 
-userRouter.delete('/', removeUser);
+userRouter.get('/', validateBody(getAllUsersValidator), getAllUser);
 
 export default userRouter;

@@ -12,15 +12,13 @@ export async function composeDown(
   signal: string,
   mailProcessor?: MailProcessor,
 ): Promise<void> {
-
-  shutdownServer(server, signal);
+  await shutdownServer(server, signal);
 
   if (mailProcessor) {
     await mailProcessor.close();
-     logger.info('Mail worker closed');
+    logger.info('Mail worker closed');
   }
-  
+
   await redisService.disconnect();
   await databaseService.disconnect();
-  process.exit(0)
 }

@@ -1,7 +1,10 @@
 export const configStorage = {
   PROVIDER: process.env.STORAGE_PROVIDER ?? 'local',
+
   LOCAL: {
     DESTINATION: process.env.STORAGE_LOCAL_DESTINATION ?? 'storage',
+    TEMP_DESTINATION:
+      process.env.STORAGE_LOCAL_TEMP_DESTINATION ?? 'storage/tmp',
   },
 
   S3: {
@@ -19,4 +22,11 @@ export const configStorage = {
   },
 
   MAX_FILE_SIZE: Number(process.env.STORAGE_MAX_FILE_SIZE ?? 5 * 1024 * 1024),
+
+  ALLOWED_MIMETYPES: [
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+    'application/pdf',
+  ],
 } as const;

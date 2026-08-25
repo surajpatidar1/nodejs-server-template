@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { authService } from './index.js';
 import { cookieService, jwtService, TokenType } from '@/services/index.js';
 import { UserType } from '@/types/index.js';
+import { UnauthorizedException } from '@/utils/exceptions.js';
 
 export const sendCode = async (req: Request, res: Response) => {
   const data = req.body;
@@ -19,6 +20,20 @@ export const checkUsername = async (req: Request, res: Response) => {
   return res.status(200).json({
     success: true,
     username,
+  });
+};
+
+export const refresh = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies?.[TokenType.REFRESH_TOKEN];
+  if (!refreshToken) throw UnauthorizedException('Refresh token required.');
+
+  const { accessToken } = await authService.refreshToken(refreshToken);
+
+  cookieService.set(res, TokenType.ACCESS_TOKEN, accessToken);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Token refreshed successfully',
   });
 };
 
@@ -62,7 +77,6 @@ export const login = async (req: Request, res: Response) => {
   );
 
   cookieService.set(res, TokenType.ACCESS_TOKEN, accessToken);
-
   cookieService.set(res, TokenType.REFRESH_TOKEN, refreshToken);
 
   return res.status(200).json({
