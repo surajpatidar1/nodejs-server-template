@@ -78,10 +78,6 @@ registry.registerPath({
   },
 });
 
-// TODO(deferred): /upload has no authentication and no rate limiting.
-// Any anonymous caller can mint valid tmp/ keys and consume storage.
-// The tmp/ prefix + resolvePath/basename checks close arbitrary-file-access
-// and deletion holes, but not storage-abuse risk.
 app.post(
   '/upload',
   uploadMiddleware.single('file'),
