@@ -59,3 +59,7 @@ export const loginValidator = z.object({
 });
 
 export const refreshValidator = z.object({});
+
+export const googleAuthValidator = z.object({
+  code: z.string().trim().min(1, 'Authorization code is required.'),
+});

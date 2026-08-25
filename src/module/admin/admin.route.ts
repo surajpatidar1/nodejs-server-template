@@ -1,21 +1,21 @@
 import { Router } from 'express';
+import { UserType } from '@/types/index.js';
+import { authMiddleware, guard } from '@/middleware/index.js';
 import {
   updateImage,
   updateAdminDetails,
   changePassword,
   forgotPassword,
 } from './admin.controller.js';
-import { guard } from '@/middleware/guard.middleware.js';
-import { validateBody } from '@/middleware/body.validate.middleware.js';
-import { UserType } from '@/types/index.js';
-import { authMiddleware } from '@/middleware/auth.middleware.js';
+import { validateBody } from '@/middleware/index.js';
 import {
   changeAdminPasswordSchema,
   forgotAdminPasswordSchema,
   updateAdminDetailsSchema,
+  updateAdminImageSchema,
 } from './admin.validator.js';
 
-const adminRouter = Router();
+export const adminRouter = Router();
 
 //public routes
 adminRouter.patch(
@@ -25,17 +25,21 @@ adminRouter.patch(
 );
 
 //protected routes
-adminRouter.use(guard(UserType.ADMIN), authMiddleware);
-adminRouter.post('/update-image', updateImage);
+adminRouter.use(authMiddleware, guard(UserType.ADMIN));
+adminRouter.post(
+  '/update-image',
+  validateBody(updateAdminImageSchema),
+  updateImage,
+);
+
 adminRouter.patch(
   '/details',
   validateBody(updateAdminDetailsSchema),
   updateAdminDetails,
 );
+
 adminRouter.patch(
   '/change-password',
   validateBody(changeAdminPasswordSchema),
   changePassword,
 );
-
-export default adminRouter;

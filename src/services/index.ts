@@ -6,3 +6,4 @@ export * from './redis/redis.service.js';
 export * from './mail/index.js';
 export * from './storage/index.js';
 export * from './otp/otp.service.js';
+export * from './oauth/index.js';

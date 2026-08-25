@@ -5,19 +5,32 @@ import {
   register,
   login,
   refresh,
+  googleAuthUrl,
+  googleCallback,
 } from './auth.controller.js';
-import { validateBody } from '@/middleware/body.validate.middleware.js';
+import {
+  authRateLimiter,
+  otpRateLimiter,
+  validateBody,
+  validateQuery,
+} from '@/middleware/index.js';
 import {
   checkUsernameValidator,
+  googleAuthValidator,
   loginValidator,
   refreshValidator,
   registerValidator,
   sendCodeValidator,
 } from './auth.validator.js';
 
-const authRouter = Router();
+export const authRouter = Router();
 
-authRouter.post('/send-code', validateBody(sendCodeValidator), sendCode);
+authRouter.post(
+  '/send-code',
+  otpRateLimiter,
+  validateBody(sendCodeValidator),
+  sendCode,
+);
 
 authRouter.post(
   '/check-username',
@@ -27,8 +40,19 @@ authRouter.post(
 
 authRouter.post('/register', validateBody(registerValidator), register);
 
-authRouter.post('/login', validateBody(loginValidator), login);
+authRouter.post('/login', authRateLimiter, validateBody(loginValidator), login);
 
 authRouter.post('/refresh', validateBody(refreshValidator), refresh);
+
+// Google OAuth
+authRouter.get('/google', googleAuthUrl);
+
+authRouter.get(
+  '/google/callback',
+  validateQuery(googleAuthValidator),
+  googleCallback,
+);
+
+authRouter.post('/google', validateBody(googleAuthValidator), googleCallback);
 
 export default authRouter;

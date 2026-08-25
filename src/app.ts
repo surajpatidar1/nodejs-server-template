@@ -4,17 +4,24 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import { registerModule, registry, setupSwagger } from '@/swagger/index.js';
-import { errorMiddleware, notFoundMiddleware } from '@/middleware/index.js';
-import authRouter from './module/auth/auth.route.js';
-import userRouter from './module/user/user.route.js';
-import adminRouter from './module/admin/admin.route.js';
-import { environmentService } from './utils/index.js';
+import {
+  correlationIdMiddleware,
+  errorMiddleware,
+  generalRateLimiter,
+  notFoundMiddleware,
+  uploadRateLimiter,
+} from '@/middleware/index.js';
 import { storageService, uploadMiddleware } from '@/services/index.js';
+import { environmentService } from './utils/index.js';
+import { authRouter } from './module/auth/index.js';
+import { userRouter } from './module/user/user.route.js';
+import { adminRouter } from './module/admin/index.js';
 
 export const app = express();
 
 app.set('trust proxy', 1);
 
+app.use(correlationIdMiddleware);
 app.use(helmet());
 app.use(
   cors({
@@ -22,7 +29,7 @@ app.use(
     credentials: true,
   }),
 );
-
+app.use(generalRateLimiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(
   express.urlencoded({
@@ -80,6 +87,7 @@ registry.registerPath({
 
 app.post(
   '/upload',
+  uploadRateLimiter,
   uploadMiddleware.single('file'),
   async (req: Request, res: Response) => {
     if (!req.file) {
