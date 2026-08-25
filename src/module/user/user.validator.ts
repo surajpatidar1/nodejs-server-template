@@ -67,3 +67,11 @@ export const forgotPasswordSchema = z.object({
 
   code: z.string().regex(/^\d{6}$/, 'OTP must be 6 digits.'),
 });
+
+export const getAllUsersValidator = z.object({
+  search: z.string().trim().optional(),
+
+  skip: z.coerce.number().int().min(0).default(0),
+
+  take: z.coerce.number().int().min(1).max(100).default(10),
+});

@@ -1,7 +1,9 @@
 import {
   databaseService,
+  jwtService,
   otpService,
   OtpType,
+  TokenType,
   utilService,
 } from '@/services/index.js';
 import {
@@ -135,6 +137,22 @@ export const authService = {
     return {
       user,
       type,
+    };
+  },
+
+  async refreshToken(refreshToken: string) {
+    const payload = jwtService.verify(refreshToken, TokenType.REFRESH_TOKEN);
+
+    const accessToken = jwtService.sign(
+      {
+        sub: payload.sub,
+        type: payload.type,
+      },
+      TokenType.ACCESS_TOKEN,
+    );
+
+    return {
+      accessToken,
     };
   },
 } as const;

@@ -5,6 +5,7 @@ import {
   removeUser,
   changePassword,
   forgotPassword,
+  getAllUser,
 } from './user.controller.js';
 
 import { authMiddleware } from '@/middleware/auth.middleware.js';
@@ -14,6 +15,7 @@ import { UserType } from '@/types/index.js';
 import {
   changePasswordSchema,
   forgotPasswordSchema,
+  getAllUsersValidator,
   updateImageSchema,
   updateUserDetailsSchema,
 } from './user.validator.js';
@@ -30,16 +32,21 @@ userRouter.patch(
 //protected route
 userRouter.use(authMiddleware, guard(UserType.USER));
 userRouter.post('/update-image', validateBody(updateImageSchema), updateImage);
+
 userRouter.patch(
   '/details',
   validateBody(updateUserDetailsSchema),
   updateUserDetails,
 );
+
 userRouter.patch(
   '/change-password',
   validateBody(changePasswordSchema),
   changePassword,
 );
+
 userRouter.delete('/:userId', removeUser);
+
+userRouter.get('/', validateBody(getAllUsersValidator), getAllUser);
 
 export default userRouter;

@@ -53,3 +53,19 @@ export const forgotPassword = async (req: Request, res: Response) => {
   const data = req.body;
   return await userService.forgotPassword(data);
 };
+
+// use this pattern for searching in any route
+export const getAllUser = async (req: Request, res: Response) => {
+  const { search, skip, take } = req.query;
+
+  const result = await userService.getAll({
+    search: search as string | undefined,
+    skip: skip ? Number(skip) : undefined,
+    take: take ? Number(take) : undefined,
+  });
+
+  return res.status(200).json({
+    success: true,
+    ...result,
+  });
+};

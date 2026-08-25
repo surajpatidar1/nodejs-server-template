@@ -57,3 +57,5 @@ export const loginValidator = z.object({
     .min(8, 'Password must be at least 8 characters.')
     .max(100),
 });
+
+export const refreshValidator = z.object({});
