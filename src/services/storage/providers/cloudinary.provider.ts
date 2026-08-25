@@ -12,7 +12,6 @@ cloudinary.config({
 
 const upload = async (file: StorageFile): Promise<StorageResult> => {
   const extension = path.extname(file.originalName);
-
   const publicId = `${crypto.randomUUID()}${extension}`;
 
   const result = await new Promise<{
@@ -52,10 +51,18 @@ const upload = async (file: StorageFile): Promise<StorageResult> => {
   };
 };
 
+const DELETABLE_RESOURCE_TYPES = ['image', 'raw', 'video'] as const;
+
 const remove = async (key: string): Promise<void> => {
-  await cloudinary.uploader.destroy(key, {
-    resource_type: 'image',
-  });
+  for (const resourceType of DELETABLE_RESOURCE_TYPES) {
+    const result = await cloudinary.uploader.destroy(key, {
+      resource_type: resourceType,
+    });
+
+    if (result.result === 'ok') {
+      return;
+    }
+  }
 };
 
 const getUrl = async (key: string): Promise<string> => {

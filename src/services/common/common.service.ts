@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import os from 'node:os';
 import { promisify } from 'node:util';
 import { configPassword } from '@/configs/config.password.js';
 
@@ -32,10 +33,7 @@ export const utilService = {
     )) as Buffer;
 
     const storedHashBuffer = Buffer.from(storedHash, 'hex');
-
-    if (derivedKey.length !== storedHashBuffer.length) {
-      return false;
-    }
+    if (derivedKey.length !== storedHashBuffer.length) return false;
 
     return crypto.timingSafeEqual(derivedKey, storedHashBuffer);
   },
@@ -73,7 +71,50 @@ export const utilService = {
       .replace(/[^a-z0-9]/g, '');
 
     const randomNumber = crypto.randomInt(1000, 9999);
-
     return `${username}${randomNumber}`;
+  },
+
+  buildSearchFilter: <T extends string>(
+    search: string | undefined,
+    fields: readonly T[],
+  ) => {
+    const value = search?.trim();
+
+    if (!value) return {};
+
+    return {
+      OR: fields.map((field) => ({
+        [field]: {
+          contains: value,
+          mode: 'insensitive' as const,
+        },
+      })),
+    };
+  },
+
+  async batchable<T, R>(
+    elements: T[],
+    fn: (element: T, index: number) => Promise<R>,
+    batchSize = Math.max(1, os.cpus().length),
+  ): Promise<R[]> {
+    const results: R[] = [];
+    let currentIndex = 0;
+
+    const worker = async (): Promise<void> => {
+      while (currentIndex < elements.length) {
+        const index = currentIndex++;
+        results[index] = await fn(elements[index], index);
+      }
+    };
+
+    const workers = Array.from(
+      {
+        length: Math.min(batchSize, elements.length),
+      },
+      () => worker(),
+    );
+
+    await Promise.all(workers);
+    return results;
   },
 } as const;

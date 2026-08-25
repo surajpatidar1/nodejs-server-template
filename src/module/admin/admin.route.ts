@@ -17,26 +17,25 @@ import {
 
 const adminRouter = Router();
 
+//public routes
+adminRouter.patch(
+  '/forgot-password',
+  validateBody(forgotAdminPasswordSchema),
+  forgotPassword,
+);
+
+//protected routes
 adminRouter.use(guard(UserType.ADMIN), authMiddleware);
-
 adminRouter.post('/update-image', updateImage);
-
 adminRouter.patch(
   '/details',
   validateBody(updateAdminDetailsSchema),
   updateAdminDetails,
 );
-
 adminRouter.patch(
   '/change-password',
   validateBody(changeAdminPasswordSchema),
   changePassword,
-);
-
-adminRouter.patch(
-  '/forgot-password',
-  validateBody(forgotAdminPasswordSchema),
-  forgotPassword,
 );
 
 export default adminRouter;

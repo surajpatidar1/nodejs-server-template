@@ -1,6 +1,5 @@
 import { app } from './app.js';
-import {logger} from '@/utils/index.js';
-
+import { logger } from '@/utils/index.js';
 import type { Server } from 'node:http';
 
 export const startServer = (
@@ -22,7 +21,7 @@ export const startServer = (
       resolve(server);
     });
 
-    server.on('error', (error) => {
+    server.once('error', (error) => {
       logger.fatal(error, 'Failed to start server');
       reject(error);
     });
@@ -32,15 +31,30 @@ export const startServer = (
 export const shutdownServer = (
   server: Server,
   signal: string,
-): void => {
-  logger.info(
-    {
-      signal,
-    },
-    'Graceful shutdown initiated',
-  );
+  timeoutMs = 10_000,
+): Promise<void> => {
+  return new Promise((resolve) => {
+    logger.info({ signal }, 'Graceful shutdown initiated');
 
-  server.close(() => {
-    logger.info('HTTP server closed');
+    const forceTimer = setTimeout(() => {
+      logger.warn(
+        { signal, timeoutMs },
+        'Graceful shutdown timed out — forcing close',
+      );
+      resolve();
+    }, timeoutMs);
+    forceTimer.unref();
+
+    server.close((error) => {
+      clearTimeout(forceTimer);
+
+      if (error) {
+        logger.error(error, 'Error while closing HTTP server');
+      } else {
+        logger.info('HTTP server closed');
+      }
+
+      resolve();
+    });
   });
 };

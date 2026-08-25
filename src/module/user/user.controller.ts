@@ -33,8 +33,8 @@ export const updateUserDetails = async (req: Request, res: Response) => {
 };
 
 export const removeUser = async (req: Request, res: Response) => {
-  const userId = Number(req.user.sub);
-  const user = await userService.deactiveUser(userId);
+  const userId = req.params.userId;
+  const user = await userService.deactiveUser(Number(userId));
 
   return res.status(200).json({
     success: true,
@@ -52,4 +52,20 @@ export const changePassword = async (req: Request, res: Response) => {
 export const forgotPassword = async (req: Request, res: Response) => {
   const data = req.body;
   return await userService.forgotPassword(data);
+};
+
+// use this pattern for searching in any route
+export const getAllUser = async (req: Request, res: Response) => {
+  const { search, skip, take } = req.query;
+
+  const result = await userService.getAll({
+    search: search as string | undefined,
+    skip: skip ? Number(skip) : undefined,
+    take: take ? Number(take) : undefined,
+  });
+
+  return res.status(200).json({
+    success: true,
+    ...result,
+  });
 };
