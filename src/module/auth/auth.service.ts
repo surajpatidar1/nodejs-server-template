@@ -20,24 +20,12 @@ const findUser = async (email: string) => {
     where: { email },
   });
 
-  if (user) {
-    return {
-      user: user,
-      type: UserType.USER,
-    };
-  }
-
   const admin = await databaseService.client.admin.findUnique({
     where: { email },
   });
 
-  if (admin) {
-    return {
-      user: admin,
-      type: UserType.ADMIN,
-    };
-  }
-
+  if (user) return { user: user, type: UserType.USER };
+  if (admin) return { user: admin, type: UserType.ADMIN };
   return null;
 };
 
@@ -51,7 +39,6 @@ export const authService = {
 
   async generateAvailableUsername(name: string): Promise<string> {
     const username = utilService.generateUsername(name);
-
     const exists = await databaseService.client.user.findUnique({
       where: {
         username,
@@ -61,10 +48,7 @@ export const authService = {
       },
     });
 
-    if (exists) {
-      throw ConflictException('Username already exists.');
-    }
-
+    if (exists) throw ConflictException('Username already exists.');
     return username;
   },
 

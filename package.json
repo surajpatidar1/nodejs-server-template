@@ -27,6 +27,7 @@
     "db:init": "prisma init",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:reset": "prisma migrate reset",
     "db:seed": "prisma db seed",
@@ -37,7 +38,8 @@
     "docker:dev:down": "docker compose -f docker-compose.dev.yml down",
     "docker:prod": "docker compose -f docker-compose.prod.yml up -d",
     "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "prisma generate && npm run db:seed"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [

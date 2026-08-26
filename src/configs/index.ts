@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import './env.schema.js';
 
 export * from './config.admin.js';
 export * from './config.mail.js';
