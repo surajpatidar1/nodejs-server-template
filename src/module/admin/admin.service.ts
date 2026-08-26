@@ -49,7 +49,7 @@ export const adminService = {
 
     if (!user) throw NotFoundException('User not found.');
 
-    return databaseService.client.user.update({
+    return databaseService.client.admin.update({
       where: {
         id: userId,
       },

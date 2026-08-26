@@ -33,9 +33,43 @@ export function registerModule(
       '{$1}',
     );
 
-    const schema = layer.route.stack
-      .map((l: any) => l.handle?.zodSchema)
-      .find(Boolean);
+    const bodyHandler = layer.route.stack.find(
+      (l: any) =>
+        l.handle?.validationType === 'body' ||
+        (l.handle?.zodSchema && !l.handle?.validationType),
+    );
+    const queryHandler = layer.route.stack.find(
+      (l: any) => l.handle?.validationType === 'query',
+    );
+    const paramsHandler = layer.route.stack.find(
+      (l: any) => l.handle?.validationType === 'params',
+    );
+    const requestHandler = layer.route.stack.find(
+      (l: any) => l.handle?.zodSchemas,
+    );
+
+    const bodySchema =
+      bodyHandler?.handle?.zodSchema ||
+      requestHandler?.handle?.zodSchemas?.body;
+    const querySchema =
+      queryHandler?.handle?.zodSchema ||
+      requestHandler?.handle?.zodSchemas?.query;
+    const paramsSchema =
+      paramsHandler?.handle?.zodSchema ||
+      requestHandler?.handle?.zodSchemas?.params;
+
+    const requestConfig =
+      bodySchema || querySchema || paramsSchema
+        ? {
+            ...(bodySchema && {
+              body: {
+                content: { 'application/json': { schema: bodySchema } },
+              },
+            }),
+            ...(querySchema && { query: querySchema }),
+            ...(paramsSchema && { params: paramsSchema }),
+          }
+        : undefined;
 
     for (const method of methods) {
       registry.registerPath({
@@ -44,9 +78,7 @@ export function registerModule(
         tags: [tag],
         summary: humanize(routePath),
         security: isProtected ? [{ bearerAuth: [] }] : [],
-        request: schema
-          ? { body: { content: { 'application/json': { schema } } } }
-          : undefined,
+        request: requestConfig,
         responses: {
           200: { description: 'Success' },
           400: { description: 'Validation error' },

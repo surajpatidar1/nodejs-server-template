@@ -1,46 +1,28 @@
-import crypto from 'node:crypto';
-import fs from 'node:fs';
 import express, { Request, Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
-import multer from 'multer';
 import { registerModule, registry, setupSwagger } from '@/swagger/index.js';
-import { errorMiddleware, notFoundMiddleware } from '@/middleware/index.js';
-import authRouter from './module/auth/auth.route.js';
-import userRouter from './module/user/user.route.js';
-import adminRouter from './module/admin/admin.route.js';
-import { configStorage } from './configs/index.js';
+import {
+  correlationIdMiddleware,
+  errorMiddleware,
+  generalRateLimiter,
+  notFoundMiddleware,
+  uploadRateLimiter,
+} from '@/middleware/index.js';
+import { storageService, uploadMiddleware } from '@/services/index.js';
 import { environmentService } from './utils/index.js';
+import { authRouter } from './module/auth/index.js';
+import { userRouter } from './module/user/index.js';
+import { adminRouter } from './module/admin/index.js';
+import { isApplicationReady } from './lifecycle/index.js';
 
 export const app = express();
 
 app.set('trust proxy', 1);
 
-const UPLOAD_DIR = configStorage.LOCAL.TEMP_DESTINATION;
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: UPLOAD_DIR,
-    filename: (_req, file, cb) => {
-      cb(null, `${crypto.randomUUID()}-${file.originalname}`);
-    },
-  }),
-  limits: {
-    fileSize: 5 * 1024 * 1024,
-  },
-  fileFilter: (_req, file, cb) => {
-    cb(
-      null,
-      configStorage.ALLOWED_MIMETYPES.some(
-        (allowedMimeType) => allowedMimeType === file.mimetype,
-      ),
-    );
-  },
-});
-
+app.use(correlationIdMiddleware);
 app.use(helmet());
 app.use(
   cors({
@@ -48,7 +30,7 @@ app.use(
     credentials: true,
   }),
 );
-
+app.use(generalRateLimiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(
   express.urlencoded({
@@ -60,7 +42,12 @@ app.use(cookieParser());
 app.use(compression());
 
 app.get('/healthz', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok' });
+  const ready = isApplicationReady();
+
+  return res.status(ready ? 200 : 503).json({
+    success: ready,
+    status: ready ? 'ok' : 'unhealthy',
+  });
 });
 
 registry.registerPath({
@@ -106,7 +93,8 @@ registry.registerPath({
 
 app.post(
   '/upload',
-  upload.single('file'),
+  uploadRateLimiter,
+  uploadMiddleware.single('file'),
   async (req: Request, res: Response) => {
     if (!req.file) {
       return res.status(400).json({
@@ -114,25 +102,15 @@ app.post(
       });
     }
 
-    return res.status(200).json({
-      filename: req.file.filename,
-      fileType: req.file.mimetype,
-      originalFilename: req.file.originalname,
+    const result = await storageService.upload({
+      buffer: req.file.buffer,
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
     });
-  },
-);
-app.post(
-  '/upload',
-  upload.single('file'),
-  async (req: Request, res: Response) => {
-    if (!req.file) {
-      return res.status(400).json({
-        message: 'File is required',
-      });
-    }
 
     return res.status(200).json({
-      filename: req.file.filename,
+      filename: result.key,
       fileType: req.file.mimetype,
       originalFilename: req.file.originalname,
     });

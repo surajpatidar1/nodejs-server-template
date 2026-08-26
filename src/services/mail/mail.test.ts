@@ -1,13 +1,31 @@
-// import into main.ts and call testMailQueue() for testing 
 import { mailService } from './mail.service.js';
 
 export async function testMailQueue(): Promise<void> {
   await mailService.enqueue({
-    to: 'surajpatidar498@gmail.com',
-    subject: 'BullMQ Mail Test',
+    to: 'surajpatidar@498gmail.com',
+    subject: 'Thank You for Using the Template',
     html: `
-      <h1>BullMQ is working</h1>
-      <p>This email was sent through the BullMQ mail queue.</p>
+      <h1>Hello 👋</h1>
+
+      <p>
+        Thank you for using this Node.js server template!
+      </p>
+
+      <p>
+        I hope this template helps you build your application
+        faster and with a solid production-ready foundation.
+      </p>
+
+      <p>
+        Thank you for using the template. ❤️
+      </p>
+
+      <p>
+        Best regards,<br />
+        Suraj
+      </p>
     `,
   });
+
+  console.log('✓ Test mail added to BullMQ successfully');
 }

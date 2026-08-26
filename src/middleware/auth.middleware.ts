@@ -1,11 +1,11 @@
-import type { Request, Response, NextFunction } from "express";
-import { UnauthorizedException } from "@/utils/index.js";
-import { jwtService, TokenType } from "@/services/index.js";
+import type { Request, Response, NextFunction } from 'express';
+import { UnauthorizedException } from '@/utils/index.js';
+import { jwtService, TokenType } from '@/services/index.js';
 
 const getAccessToken = (req: Request): string | undefined => {
   const authorization = req.headers.authorization;
 
-  if (authorization?.startsWith("Bearer ")) {
+  if (authorization?.startsWith('Bearer ')) {
     const token = authorization.slice(7).trim();
 
     if (token) {
@@ -13,7 +13,7 @@ const getAccessToken = (req: Request): string | undefined => {
     }
   }
 
-  const cookieToken = req.cookies?.[TokenType.ACCESS_TOKEN]
+  const cookieToken = req.cookies?.[TokenType.ACCESS_TOKEN];
 
   if (cookieToken?.trim()) {
     return cookieToken;
@@ -30,19 +30,16 @@ export const authMiddleware = (
   const token = getAccessToken(req);
 
   if (!token) {
-    throw UnauthorizedException("Access token required");
+    throw UnauthorizedException('Access token required');
   }
 
   try {
-    const payload = jwtService.verify(
-      token,
-      TokenType.ACCESS_TOKEN,
-    );
+    const payload = jwtService.verify(token, TokenType.ACCESS_TOKEN);
 
     req.user = payload;
 
     next();
   } catch {
-    throw UnauthorizedException("Invalid or expired token");
+    throw UnauthorizedException('Invalid or expired token');
   }
 };

@@ -1,16 +1,10 @@
 import { Router } from 'express';
 import {
-  updateImage,
-  updateUserDetails,
-  removeUser,
-  changePassword,
-  forgotPassword,
-  getAllUser,
-} from './user.controller.js';
-
-import { authMiddleware } from '@/middleware/auth.middleware.js';
-import { guard } from '@/middleware/guard.middleware.js';
-import { validateBody } from '@/middleware/body.validate.middleware.js';
+  authMiddleware,
+  guard,
+  validateBody,
+  validateQuery,
+} from '@/middleware/index.js';
 import { UserType } from '@/types/index.js';
 import {
   changePasswordSchema,
@@ -19,8 +13,16 @@ import {
   updateImageSchema,
   updateUserDetailsSchema,
 } from './user.validator.js';
+import {
+  updateImage,
+  updateUserDetails,
+  removeUser,
+  changePassword,
+  forgotPassword,
+  getAllUser,
+} from './user.controller.js';
 
-const userRouter = Router();
+export const userRouter = Router();
 
 //public route
 userRouter.patch(
@@ -46,7 +48,4 @@ userRouter.patch(
 );
 
 userRouter.delete('/:userId', removeUser);
-
-userRouter.get('/', validateBody(getAllUsersValidator), getAllUser);
-
-export default userRouter;
+userRouter.get('/', validateQuery(getAllUsersValidator), getAllUser);

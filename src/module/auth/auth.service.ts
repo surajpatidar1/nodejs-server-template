@@ -1,6 +1,7 @@
 import {
   databaseService,
   jwtService,
+  oauthService,
   otpService,
   OtpType,
   TokenType,
@@ -73,7 +74,7 @@ export const authService = {
     username: string;
     email: string;
     password: string;
-    dailcode: string;
+    dialCode: string;
     mobile: string;
     profileImage?: string;
     country: string;
@@ -153,6 +154,79 @@ export const authService = {
 
     return {
       accessToken,
+    };
+  },
+
+  async googleAuth(code: string) {
+    const { profile } = await oauthService.authenticate('google', code);
+
+    const existingMeta = await databaseService.client.userMeta.findUnique({
+      where: { googleId: profile.providerId },
+      include: { user: true },
+    });
+
+    let user = existingMeta?.user ?? null;
+
+    if (!user) {
+      const userByEmail = await databaseService.client.user.findUnique({
+        where: { email: profile.email },
+      });
+
+      if (userByEmail) {
+        user = userByEmail;
+        await databaseService.client.userMeta.upsert({
+          where: { userId: user.id },
+          update: { googleId: profile.providerId },
+          create: { userId: user.id, googleId: profile.providerId },
+        });
+      } else {
+        const baseName = `${profile.firstname}${profile.lastname}`.trim();
+        let username = utilService.generateUsername(baseName || 'user');
+        const usernameExists = await databaseService.client.user.findUnique({
+          where: { username },
+        });
+        if (usernameExists) {
+          username = `${username}${Math.floor(100 + Math.random() * 900)}`;
+        }
+
+        user = await databaseService.client.user.create({
+          data: {
+            firstname: profile.firstname || 'Google',
+            lastname: profile.lastname || 'User',
+            email: profile.email,
+            username,
+            isVerified: true,
+            profileImage: profile.profileImage,
+            meta: {
+              create: {
+                googleId: profile.providerId,
+              },
+            },
+          },
+        });
+      }
+    }
+
+    const accessToken = jwtService.sign(
+      {
+        sub: String(user.id),
+        type: UserType.USER,
+      },
+      TokenType.ACCESS_TOKEN,
+    );
+
+    const refreshToken = jwtService.sign(
+      {
+        sub: String(user.id),
+        type: UserType.USER,
+      },
+      TokenType.REFRESH_TOKEN,
+    );
+
+    return {
+      user,
+      accessToken,
+      refreshToken,
     };
   },
 } as const;

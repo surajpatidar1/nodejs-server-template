@@ -46,12 +46,14 @@ export const removeUser = async (req: Request, res: Response) => {
 export const changePassword = async (req: Request, res: Response) => {
   const userId = Number(req.user.sub);
   const data = req.body;
-  return await userService.changePassword(userId, data);
+  const result = await userService.changePassword(userId, data);
+  return res.status(200).json(result);
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
   const data = req.body;
-  return await userService.forgotPassword(data);
+  const result = await userService.forgotPassword(data);
+  return res.status(200).json(result);
 };
 
 // use this pattern for searching in any route

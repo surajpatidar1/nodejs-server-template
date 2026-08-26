@@ -1,10 +1,10 @@
-import type {
-  NextFunction,
-  Request,
-  Response,
-} from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 import { logger } from '@/utils/index.js';
+
+interface AppError extends Error {
+  statusCode?: number;
+}
 
 export function errorMiddleware(
   error: unknown,
@@ -16,14 +16,11 @@ export function errorMiddleware(
     if (error.code === 'LIMIT_FILE_SIZE') {
       res.status(413).json({
         success: false,
-        message:
-          'File size exceeds the allowed limit',
+        message: 'File size exceeds the allowed limit',
       });
-
       return;
     }
 
-    logger.error(error);
     res.status(400).json({
       success: false,
       message: error.message,
@@ -33,30 +30,32 @@ export function errorMiddleware(
   }
 
   if (error instanceof Error) {
-    logger.error(error);
+    const appErr = error as AppError;
+    const statusCode =
+      appErr.statusCode && appErr.statusCode >= 400 && appErr.statusCode < 600
+        ? appErr.statusCode
+        : 500;
 
-    res.status(500).json({
+    if (statusCode === 500) {
+      logger.error(error);
+    }
+
+    res.status(statusCode).json({
       success: false,
-      message: 'Internal Server Error',
+      message: statusCode === 500 ? 'Internal Server Error' : error.message,
     });
 
     return;
   }
 
-  logger.error(
-    new Error('Unknown error occurred'),
-  );
-
+  logger.error(new Error('Unknown error occurred'));
   res.status(500).json({
     success: false,
     message: 'Internal Server Error',
   });
 }
 
-export function notFoundMiddleware(
-  _req: Request,
-  res: Response,
-): void {
+export function notFoundMiddleware(_req: Request, res: Response): void {
   res.status(404).json({
     success: false,
     message: 'Route not found',

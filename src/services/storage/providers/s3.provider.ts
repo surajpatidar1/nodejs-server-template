@@ -7,6 +7,7 @@ import {
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { configStorage } from '@/configs/index.js';
+import { BadRequestException } from '@/utils/exceptions.js';
 
 import type { StorageFile, StorageResult } from '../storage.types.js';
 
@@ -26,7 +27,7 @@ const s3Client = new S3Client({
 const upload = async (file: StorageFile): Promise<StorageResult> => {
   const extension = path.extname(file.originalName);
 
-  const key = `${crypto.randomUUID()}${extension}`;
+  const key = `tmp/${crypto.randomUUID()}${extension}`;
 
   await s3Client.send(
     new PutObjectCommand({
@@ -65,21 +66,26 @@ const getUrl = async (key: string): Promise<string> => {
   return `https://${configStorage.S3.BUCKET}.s3.${configStorage.S3.REGION}.amazonaws.com/${key}`;
 };
 
-const move = async (filename: string, folder: string): Promise<string> => {
-  const newKey = `${folder}/${filename}`;
+const move = async (key: string, folder: string): Promise<string> => {
+  if (!key.startsWith('tmp/')) {
+    throw BadRequestException('Invalid file key: must be a temporary upload.');
+  }
+
+  const newKey = `${folder}/${path.basename(key)}`;
 
   await s3Client.send(
     new CopyObjectCommand({
       Bucket: configStorage.S3.BUCKET,
-      CopySource: `${configStorage.S3.BUCKET}/${filename}`,
+      CopySource: `${configStorage.S3.BUCKET}/${key}`,
       Key: newKey,
     }),
   );
 
+  // Delete source only after successful copy; key is validated as tmp/ above
   await s3Client.send(
     new DeleteObjectCommand({
       Bucket: configStorage.S3.BUCKET,
-      Key: filename,
+      Key: key,
     }),
   );
 

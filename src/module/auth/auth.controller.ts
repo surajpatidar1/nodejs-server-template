@@ -1,6 +1,11 @@
 import type { Request, Response } from 'express';
 import { authService } from './index.js';
-import { cookieService, jwtService, TokenType } from '@/services/index.js';
+import {
+  cookieService,
+  jwtService,
+  oauthService,
+  TokenType,
+} from '@/services/index.js';
 import { UserType } from '@/types/index.js';
 import { UnauthorizedException } from '@/utils/exceptions.js';
 
@@ -83,5 +88,33 @@ export const login = async (req: Request, res: Response) => {
     success: true,
     message: 'Login successful',
     result,
+  });
+};
+
+export const googleAuthUrl = async (req: Request, res: Response) => {
+  const url = oauthService.getAuthorizationUrl('google');
+  return res.status(200).json({
+    success: true,
+    url,
+  });
+};
+
+export const googleCallback = async (req: Request, res: Response) => {
+  const code = (req.body?.code || req.query?.code) as string;
+  if (!code) {
+    return res.status(400).json({
+      success: false,
+      message: 'Authorization code is required.',
+    });
+  }
+
+  const result = await authService.googleAuth(code);
+  cookieService.set(res, TokenType.ACCESS_TOKEN, result.accessToken);
+  cookieService.set(res, TokenType.REFRESH_TOKEN, result.refreshToken);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Google authentication successful',
+    user: result.user,
   });
 };

@@ -5,3 +5,4 @@ uploads
 coverage
 .env
 .env.*
+.github/workflows/

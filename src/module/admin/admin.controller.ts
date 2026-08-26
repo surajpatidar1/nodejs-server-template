@@ -35,10 +35,12 @@ export const updateAdminDetails = async (req: Request, res: Response) => {
 export const changePassword = async (req: Request, res: Response) => {
   const userId = Number(req.user.sub);
   const data = req.body;
-  return await adminService.changePassword(userId, data);
+  const result = await adminService.changePassword(userId, data);
+  return res.status(200).json(result);
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
   const data = req.body;
-  return await adminService.forgotPassword(data);
+  const result = await adminService.forgotPassword(data);
+  return res.status(200).json(result);
 };

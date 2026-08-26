@@ -1,10 +1,7 @@
-import type {
-  OAuthProfile,
-  OAuthToken,
-} from './oauth.types.js';
+import type { OAuthProfile, OAuthToken } from './oauth.types.js';
 
 export interface OAuthProvider {
   getAuthorizationUrl(): string;
-  exchangeCode( code: string,): Promise<OAuthToken>;
-  getProfile( accessToken: string,): Promise<OAuthProfile>;
+  exchangeCode(code: string): Promise<OAuthToken>;
+  getProfile(accessToken: string): Promise<OAuthProfile>;
 }

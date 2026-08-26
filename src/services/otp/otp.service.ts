@@ -6,6 +6,7 @@ import { databaseService } from '../database/database.service.js';
 import { utilService } from '../common/common.service.js';
 import { OTP_TTL_MINUTES } from '@/module/auth/index.js';
 import { mailService } from '../mail/mail.service.js';
+import { environmentService } from '@/utils/index.js';
 
 export type OtpType = 'register' | 'forgot-password';
 
@@ -30,7 +31,6 @@ export const otpService = {
     }
 
     const { code } = utilService.generateOtp();
-
     const lastSentAt = new Date();
 
     const otpRecord = await databaseService.client.otp.upsert({
@@ -60,7 +60,6 @@ export const otpService = {
     });
 
     const template = data.type === 'register' ? 'otp' : 'forgot-password';
-
     const subject =
       data.type === 'register' ? 'Verification code' : 'Password reset code';
 
@@ -86,6 +85,9 @@ export const otpService = {
   },
 
   async verifyOtp(data: { otp: string; email: string }): Promise<boolean> {
+    const isDevBypass =
+      environmentService.isDevelopment() && data.otp === '000000';
+
     const otpRecord = await databaseService.client.otp.findUnique({
       where: {
         transport_target: {
@@ -96,6 +98,9 @@ export const otpService = {
     });
 
     if (!otpRecord) {
+      if (isDevBypass) {
+        return true;
+      }
       throw UnauthorizedException(
         `No verification code sent for ${data.email}`,
       );
@@ -109,11 +114,14 @@ export const otpService = {
       throw UnauthorizedException('OTP has already been verified.');
     }
 
-    if (utilService.isOtpExpired(otpRecord.lastSentAt, OTP_TTL_MINUTES)) {
+    if (
+      !isDevBypass &&
+      utilService.isOtpExpired(otpRecord.lastSentAt, OTP_TTL_MINUTES)
+    ) {
       throw UnauthorizedException('OTP has expired.');
     }
 
-    if (otpRecord.code !== data.otp) {
+    if (!isDevBypass && otpRecord.code !== data.otp) {
       const retries = otpRecord.retries + 1;
 
       await databaseService.client.otp.update({

@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 
 import { configStorage } from '@/configs/index.js';
+import { BadRequestException } from '@/utils/exceptions.js';
 import type { StorageFile, StorageResult } from '../storage.types.js';
 
 const destination = path.resolve(configStorage.LOCAL.DESTINATION);
@@ -25,10 +26,11 @@ const resolvePath = (key: string): string => {
 };
 
 const upload = async (file: StorageFile): Promise<StorageResult> => {
-  await ensureDirectory();
+  const tmpDir = path.resolve(destination, 'tmp');
+  await ensureDirectory(tmpDir);
 
   const extension = path.extname(file.originalName);
-  const key = `${crypto.randomUUID()}${extension}`;
+  const key = `tmp/${crypto.randomUUID()}${extension}`;
   const filePath = resolvePath(key);
 
   await fs.writeFile(filePath, file.buffer);
@@ -58,15 +60,20 @@ const getUrl = async (key: string): Promise<string> => {
   return `/storage/${key}`;
 };
 
-const move = async (filename: string, folder: string): Promise<string> => {
-  const sourcePath = path.resolve(destination, 'tmp', filename);
-  const destinationDir = path.resolve(destination, folder);
-  await ensureDirectory(destinationDir);
+const move = async (key: string, folder: string): Promise<string> => {
+  if (!key.startsWith('tmp/')) {
+    throw BadRequestException('Invalid file key: must be a temporary upload.');
+  }
 
-  const destinationPath = path.resolve(destinationDir, filename);
-  await fs.rename(sourcePath, destinationPath);
+  const sourcePath = resolvePath(key);
+  const basename = path.basename(key);
+  const destKey = `${folder}/${basename}`;
+  const destPath = resolvePath(destKey);
 
-  return `/storage/${folder}/${filename}`;
+  await ensureDirectory(path.dirname(destPath));
+  await fs.rename(sourcePath, destPath);
+
+  return destKey;
 };
 
 export const localStorageProvider = {

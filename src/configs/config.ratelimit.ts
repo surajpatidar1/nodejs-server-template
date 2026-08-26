@@ -1,0 +1,6 @@
+export const configRateLimiting = {
+  GENERAL_WINDOW_MS: 60 * 1000,
+  AUTH_GENERAL_WINDOW_MS: 15 * 60 * 1000,
+  OTP_GENERAL_WINDOW_MS: 10 * 60 * 1000,
+  UPLOAD_GENERAL_WINDOW_MS: 60 * 1000,
+} as const;
