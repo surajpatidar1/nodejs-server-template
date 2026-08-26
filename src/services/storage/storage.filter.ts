@@ -26,18 +26,13 @@ const allowedMimeTypes = new Set([
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 ]);
 
-
 export const storageFileFilter = (
   _req: Request,
   file: Express.Multer.File,
   callback: FileFilterCallback,
 ): void => {
   if (!allowedMimeTypes.has(file.mimetype)) {
-    callback(
-      new Error(
-        `Unsupported file type: ${file.mimetype}`,
-      ),
-    );
+    callback(new Error(`Unsupported file type: ${file.mimetype}`));
 
     return;
   }

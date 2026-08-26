@@ -1,9 +1,9 @@
-import {configFactory} from "@/configs/config.load.js";
+import { configFactory } from '@/configs/config.load.js';
 
-enum NodeType{
-PRODUCTION = 'production',    
-DEVELOPMENT = 'development',
-TEST = 'test'
+enum NodeType {
+  PRODUCTION = 'production',
+  DEVELOPMENT = 'development',
+  TEST = 'test',
 }
 
 export const environmentService = {
@@ -19,4 +19,3 @@ export const environmentService = {
     return configFactory.NODE_ENV === NodeType.TEST;
   },
 } as const;
-

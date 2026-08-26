@@ -10,18 +10,15 @@ export interface MailJobData {
   html: string;
 }
 
-export const mailQueue = new Queue<MailJobData>(
-  MAIL_QUEUE,
-  {
-    connection: redis,
-    defaultJobOptions: {
-      attempts: configQueue.DEFAULT_ATTEMPTS,
-      backoff: {
-        type: 'exponential',
-        delay: configQueue.BACKOFF_DELAY,
-      },
-      removeOnComplete: 100,
-      removeOnFail: 1000,
+export const mailQueue = new Queue<MailJobData>(MAIL_QUEUE, {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: configQueue.DEFAULT_ATTEMPTS,
+    backoff: {
+      type: 'exponential',
+      delay: configQueue.BACKOFF_DELAY,
     },
+    removeOnComplete: 100,
+    removeOnFail: 1000,
   },
-);
+});

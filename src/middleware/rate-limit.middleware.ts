@@ -1,3 +1,4 @@
+import { configRateLimiting } from '@/configs/index.js';
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
 
 interface RateLimitOptions {
@@ -65,26 +66,26 @@ export function createRateLimiter(options: RateLimitOptions): RequestHandler {
 }
 
 export const generalRateLimiter = createRateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: configRateLimiting.GENERAL_WINDOW_MS,
   max: 100,
   message: 'Too many requests. Please try again later.',
 });
 
 export const authRateLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
+  windowMs: configRateLimiting.AUTH_GENERAL_WINDOW_MS,
   max: 10,
   message:
     'Too many authentication attempts. Please try again after 15 minutes.',
 });
 
 export const otpRateLimiter = createRateLimiter({
-  windowMs: 10 * 60 * 1000,
+  windowMs: configRateLimiting.OTP_GENERAL_WINDOW_MS,
   max: 5,
   message: 'Too many OTP requests. Please wait before requesting another code.',
 });
 
 export const uploadRateLimiter = createRateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: configRateLimiting.UPLOAD_GENERAL_WINDOW_MS,
   max: 20,
   message: 'Upload rate limit exceeded. Please try again shortly.',
 });

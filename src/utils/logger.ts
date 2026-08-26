@@ -1,7 +1,6 @@
 import pino from 'pino';
-import { configFactory,  configLoggerFactory } from '@/configs/index.js';
-import {environmentService} from './environment.js';
-
+import { configFactory, configLoggerFactory } from '@/configs/index.js';
+import { environmentService } from './environment.js';
 
 export const logger = environmentService.isDevelopment()
   ? pino(

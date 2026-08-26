@@ -15,14 +15,14 @@ export const startServer = (
           env,
           port,
         },
-        'HTTP server is listening',
+        '[READY] HTTP server is listening',
       );
 
       resolve(server);
     });
 
     server.once('error', (error) => {
-      logger.fatal(error, 'Failed to start server');
+      logger.fatal(error, '[ERROR] Failed to start server');
       reject(error);
     });
   });
@@ -34,12 +34,12 @@ export const shutdownServer = (
   timeoutMs = 10_000,
 ): Promise<void> => {
   return new Promise((resolve) => {
-    logger.info({ signal }, 'Graceful shutdown initiated');
+    logger.info({ signal }, '[READY] Graceful shutdown initiated');
 
     const forceTimer = setTimeout(() => {
       logger.warn(
         { signal, timeoutMs },
-        'Graceful shutdown timed out — forcing close',
+        '[WARN] Graceful shutdown timed out — forcing close',
       );
       resolve();
     }, timeoutMs);
@@ -49,9 +49,9 @@ export const shutdownServer = (
       clearTimeout(forceTimer);
 
       if (error) {
-        logger.error(error, 'Error while closing HTTP server');
+        logger.error(error, '[ERROR] Error while closing HTTP server');
       } else {
-        logger.info('HTTP server closed');
+        logger.info('[DONE] HTTP server closed');
       }
 
       resolve();

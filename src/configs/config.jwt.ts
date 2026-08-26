@@ -1,4 +1,4 @@
-import { SignOptions } from "jsonwebtoken";
+import { SignOptions } from 'jsonwebtoken';
 
 export const configJwt = {
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET!,
@@ -11,5 +11,4 @@ export const configJwt = {
   REFRESH_TOKEN_OPTIONS: {
     expiresIn: '7d',
   } satisfies SignOptions,
-  
 } as const;

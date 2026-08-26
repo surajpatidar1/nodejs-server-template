@@ -14,8 +14,9 @@ import {
 import { storageService, uploadMiddleware } from '@/services/index.js';
 import { environmentService } from './utils/index.js';
 import { authRouter } from './module/auth/index.js';
-import { userRouter } from './module/user/user.route.js';
+import { userRouter } from './module/user/index.js';
 import { adminRouter } from './module/admin/index.js';
+import { isApplicationReady } from './lifecycle/index.js';
 
 export const app = express();
 
@@ -41,7 +42,12 @@ app.use(cookieParser());
 app.use(compression());
 
 app.get('/healthz', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok' });
+  const ready = isApplicationReady();
+
+  return res.status(ready ? 200 : 503).json({
+    success: ready,
+    status: ready ? 'ok' : 'unhealthy',
+  });
 });
 
 registry.registerPath({

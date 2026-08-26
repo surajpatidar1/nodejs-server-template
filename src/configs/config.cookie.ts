@@ -1,9 +1,8 @@
 import type { CookieOptions } from 'express';
-import {environmentService} from '@/utils/environment.js';
+import { environmentService } from '@/utils/environment.js';
 import { TokenType } from '@/services/index.js';
 
 export const configCookie = {
-  
   ACCESS_TOKEN_NAME: TokenType.ACCESS_TOKEN,
   REFRESH_TOKEN_NAME: TokenType.REFRESH_TOKEN,
 
