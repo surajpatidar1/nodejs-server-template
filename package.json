@@ -50,7 +50,7 @@
     ]
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.1",
+    "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.0",
     "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.10",
@@ -70,7 +70,7 @@
     "prettier": "^3.9.6",
     "prisma": "^7.9.1",
     "tsc-alias": "^1.9.1",
-    "tsx": "^4.23.9",
+    "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   },
@@ -79,13 +79,13 @@
     "@aws-sdk/client-s3": "^3.1106.0",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
-    "bullmq": "^6.0.9",
+    "bullmq": "^6.2.0",
     "cloudinary": "^2.10.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "google-auth-library": "^11.0.0",
+    "google-auth-library": "^11.0.2",
     "helmet": "^8.3.0",
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
