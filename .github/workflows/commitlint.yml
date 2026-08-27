@@ -2,8 +2,8 @@
 
 "on":
   # Push trigger disabled while actively developing - only checked on PR/merge.
-   push:
-   branches: [main]
+  #  push:
+  #  branches: [main]
   pull_request:
     branches: [main]
 

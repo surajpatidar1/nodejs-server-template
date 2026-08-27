@@ -4,8 +4,8 @@ on:
   # Push trigger disabled while actively developing the template -
   # CI only runs on pull requests (i.e. when merging), not on every push.
   # Uncomment when you want CI to also run on direct pushes.
-   push:
-     branches: [main, dev]
+  #  push:
+  #    branches: [main]
   pull_request:
     branches: [main]
 
