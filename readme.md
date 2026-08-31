@@ -239,12 +239,12 @@ QUEUE_BACKOFF_DELAY=1000
 
 The template includes:
 
-* JWT access tokens
-* JWT refresh tokens
-* HTTP cookie handling
-* Password hashing
-* OTP support
-* OAuth support
+- JWT access tokens
+- JWT refresh tokens
+- HTTP cookie handling
+- Password hashing
+- OTP support
+- OAuth support
 
 Configure JWT:
 
