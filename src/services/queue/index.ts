@@ -1,1 +1,1 @@
-export {createProcessor} from './processor.js'
+export { createProcessor } from './processor.js';
