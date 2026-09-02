@@ -83,7 +83,7 @@
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "bullmq": "^6.2.0",
-    "cloudinary": "^2.10.0",
+    "cloudinary": "^2.11.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
